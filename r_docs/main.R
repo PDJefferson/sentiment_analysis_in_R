@@ -42,19 +42,16 @@ labeled_dataset <- label_dataset(dataset)
 
 #creating bag of words to work with the classifier
 bag_of_words_dataset <- bag_of_words(labeled_dataset)
+
 ################################################################################
 #training our model
 
 #splitting the data into training set and test set
-#to ensure the split is always the same, we create a seed for our splitter
-set.seed(123)
-
-#creating splitter, which will split the data in 80% for training set and 20% for
+#creating splitter, which will split the data in 70% for training set and 30% for
 #the test set
-split = sample.split(bag_of_words_dataset$rating, SplitRatio = 0.60)
-
-training_set = subset(bag_of_words_dataset, split == TRUE)
-test_set = subset(bag_of_words_dataset, split == FALSE)
+split = sort(sample(nrow(bag_of_words_dataset), nrow(bag_of_words_dataset)*.7))
+training_set = bag_of_words_dataset[split,]
+test_set = bag_of_words_dataset[-split,]
 
 #training model using random forest classifier
 classifier <- random_forest_classifier(training_set)
@@ -63,6 +60,6 @@ classifier <- random_forest_classifier(training_set)
 y_pred = predict(classifier, newdata = test_set[-6485])
 
 # Making the Confusion Matrix to compare results
-cm = table(test_set[, 6485], y_pred)
+confusion_matrix = table(test_set[, 6485], y_pred)
 
 

@@ -26,7 +26,7 @@ bag_of_words <- function(dataset_original) {
   #sparcity means in this case the words that do not appear frequently
   dtm = DocumentTermMatrix(corpus_dataset)
   
-  #removes the words that do not appear frequently, filter non_frequent words that
+  #removes the words that do not appear frequently, filter non-frequent words that
   #we want to remove from our data
   dtm = removeSparseTerms(dtm, 0.999)
   
