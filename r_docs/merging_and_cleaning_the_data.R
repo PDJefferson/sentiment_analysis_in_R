@@ -110,9 +110,9 @@ refined_artists_dataset <- rbind(refined_ariana_grande_dataset,
 
 
 #writing to a csv fill. Empty string will have the form of unicode zero width
-#space,therefore, it needs to be clean by using a third party software
+#space,therefore, it needs to be clean on the preprocessing step of the data
 write.csv(refined_artists_dataset, 
-          "your path\\artists_songs.csv",
+          "your directory path\\artists_songs.csv",
           row.names = FALSE)
 
 

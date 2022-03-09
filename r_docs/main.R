@@ -14,13 +14,16 @@
 #install.packages("ggplot2")
 #to help working with text and cleaning of the data
 # install.packages('tm')
-#to create the bag of words
+#to remove the stemming words
 # install.packages('SnowballC')
 #to work with the classifier
 # install.packages('randomForest')
 #to split the data randomly
 # install.packages('caTools')
+#to convert unicode to utf-8 values/character
+#install.packages('rlang')
 
+library(rlang)
 library(caTools)
 library(randomForest)
 library(tm)
@@ -47,11 +50,12 @@ labeled_dataset <- label_dataset(dataset)
 #creating bag of words model to work with the classifier
 bag_of_words_dataset <- bag_of_words(labeled_dataset)
 
-#we copy the rating variable to the new dataset
+#copy the rating variable to the new dataset
 bag_of_words_dataset$rating = labeled_dataset$rating
 
 # Encoding the target feature as factor
 bag_of_words_dataset$rating = factor(labeled_dataset$rating, levels = c(0, 1))
+
 
 ################################################################################
 #training our model
@@ -65,7 +69,6 @@ test_set = bag_of_words_dataset[-split,]
 
 #training model using random forest classifier
 classifier <- random_forest_classifier(training_set)
-
 
 #predicting test results
 y_pred = predict(classifier, newdata = test_set[-ncol(test_set)])

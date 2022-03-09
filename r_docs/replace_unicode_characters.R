@@ -4,29 +4,13 @@ replace_unicode_chars <- function(dataset) {
   few_lyrics_remover = ifelse(nchar(dataset$lyric) < 350, TRUE, FALSE)
   dataset = dataset[!few_lyrics_remover,]
   
-  #replace unicode characters with empty characters
+  #replace unicode characters with its ascii equivalent
   dataset <- dataset %>%
-    mutate(title = str_replace(string = title ,
-                                pattern ="<U\\+\\w+>" ,
-                                replacement =  "")
-           ,lyric = str_replace(string = lyric, 
-                                pattern = "<U\\+\\w+>" ,
-                                replacement =  "")
-           ,album = str_replace(string = album, 
-                                pattern = "<U\\+\\w+>", 
-                                replacement =  ""))
-  #remove replacement character(�) that gets created after removing 
-  #the unicode chars
-  dataset <- dataset %>%
-    mutate(title = str_replace(string = title ,
-                               pattern ="\uFFFD" ,
-                               replacement =  "")
-           ,lyric = str_replace(string = lyric, 
-                                pattern = "\uFFFD" ,
-                                replacement =  "")
-           ,album = str_replace(string = album, 
-                                pattern = "\uFFFD", 
-                                replacement =  ""))
-  
+    mutate(artist= chr_unserialise_unicode(artist)
+           ,title = chr_unserialise_unicode(title)
+           ,lyric = chr_unserialise_unicode(lyric)
+           ,album = chr_unserialise_unicode(album))
+
+  return(dataset)
   
 }
