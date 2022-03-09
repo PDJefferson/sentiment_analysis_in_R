@@ -1,13 +1,11 @@
 ################################################################################
 #tokenizing and labeling the dataset
 label_dataset <- function(dataset) {
- 
+  
   #breaking each word in the lyric and keeping track of which lyric
   #the word belongs
   tokenized_dataset <- dataset %>%
-    group_by(artist) %>%
     mutate(linenumber = row_number()) %>%
-    ungroup() %>%
     unnest_tokens(word, lyric)
   
   #comparing artists lyrics with bing sentiment and counting the
@@ -31,16 +29,20 @@ label_dataset <- function(dataset) {
   #and 0 otherwise
   labeled_dataset = normalized_artist_sentiment_analysis_through_words %>%
     group_by(title,linenumber) %>%
-    transmute(rating = names(sort(summary(sentiment), decreasing = TRUE)[1:1])) %>%
-    count(rating, title, sort = FALSE)
+    transmute(rating = names(sort(summary(sentiment), 
+                                  decreasing = TRUE)[1:1])) %>%
+    count(rating,title, sort = FALSE) %>%
+    ungroup()
 
   #joining the ratings with their respective lyrics using its title
   labeled_dataset <- dataset %>%
       inner_join(labeled_dataset[,1:3], by="title")
       
-  #finally, to ensure there are no duplicates of titles in our data, we use
-  #distinct to remove duplicates.
-  labeled_dataset = distinct(labeled_dataset, title, .keep_all = TRUE)
+  #finally, to ensure there are no duplicates of lyrics in our data, we use
+  #distinct to remove it.
+  labeled_dataset = distinct(labeled_dataset, 
+                             lyric, title, album,
+                             .keep_all = TRUE)
     
   return(subset(labeled_dataset, select = -c(linenumber)))
 }
