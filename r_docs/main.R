@@ -22,7 +22,10 @@
 # install.packages('caTools')
 #to convert unicode to utf-8 values/character
 #install.packages('rlang')
+#to create clean tables
+#install.packages('gt')
 
+#load libraries
 library(rlang)
 library(caTools)
 library(randomForest)
@@ -33,10 +36,14 @@ library(dplyr)
 library(stringr)
 library(tidytext)
 library(ggplot2)
+library(gt)
+
 source("./r_docs/replace_unicode_characters.R")
 source("./r_docs/labeling_data.R")
 source("./r_docs/bag_of_words.R")
 source("./r_docs/random_forest_classification.R")
+source("./r_docs/display_tokenize_data.R")
+source("./r_docs/display_bag_of_words_model.R")
 
 #loading the dataset
 dataset = read.csv("./data/artists_songs.csv")
@@ -47,6 +54,9 @@ dataset <- replace_unicode_chars(dataset)
 #labeling the data
 labeled_dataset <- label_dataset(dataset)
 
+#display tokenize data
+create_graph_to_display_frequency_of_sentiments(labeled_dataset)
+
 #creating bag of words model to work with the classifier
 bag_of_words_dataset <- bag_of_words(labeled_dataset)
 
@@ -56,7 +66,8 @@ bag_of_words_dataset$rating = labeled_dataset$rating
 # Encoding the target feature as factor
 bag_of_words_dataset$rating = factor(labeled_dataset$rating, levels = c(0, 1))
 
-
+#display bag of words
+create_table_for_bag_of_words(bag_of_words_dataset)
 ################################################################################
 #training our model
 
