@@ -17,7 +17,47 @@ bag_of_words <- function(dataset_original) {
   #words that are alike like loved and love will be take it as one
   corpus_dataset = tm_map(corpus_dataset, stemDocument)
   #removes white spaces and extra spaces
+  #corpus_dataset = tm_map(corpus_dataset, stripWhitespace)
+  
+  
+  #--------------------------------------------------------------------------------------------------------------------------------
+  #-------------------------------------------------------------------
+  # Removing personalized stop-words
+  #--------------------------------------------------------------------
+  additional_stowords <- c("mmm", "gotta", "beyonc", "hey","em", "huh", "eh", "te", "ohoh",
+                           "yeah", "oh","ya", "yo", "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
+                           "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki","y'all","c'mon", "minaj",
+                           "whoa", "nananana", "rihanna", "eminem", "cardi", "babe", "niggas", "pre", "na", "ella", "la")
+  corpus_dataset <- tm_map(corpus_dataset, removeWords, additional_stowords)
+  
+  #-------------------------------------------------------------------
+  # remove swear words --> does not work in this file (but works in main)
+  #-----------------------------------------------------------------------
+  swears<-as.character(read.table('./data/swear_words.txt')$col1)
+  
+  #n_swears <- length(readLines('./data/swear_words.txt'));
+  #n_swears # 82 number of swear words in the file
+  
+  corpus_dataset <- tm_map(corpus_dataset, removeWords, swears)
+  
+  # --------------------------------------------------------------------
+  
+  
+  #removes white spaces and extra spaces
   corpus_dataset = tm_map(corpus_dataset, stripWhitespace)
+  
+  # substr(corpus_dataset[[1]]$content, 1, 1000) # Cleaned text --> print
+  
+  
+  #---------------------------------------------------
+  # Lemmatization --> does not work
+  #--------------------------------------------------
+  #corpus_dataset <- tm_map(corpus_dataset, textstem::lemmatize_strings)
+  
+  
+  
+  
+  #------------------------------------------------------------------------------------------------------------
   
   #Creating the Bag of Words model.
   #creates a table with columns that are all the words that 

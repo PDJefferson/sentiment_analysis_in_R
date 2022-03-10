@@ -45,6 +45,96 @@ source("./r_docs/random_forest_classification.R")
 source("./r_docs/display_tokenize_data.R")
 source("./r_docs/display_bag_of_words_model.R")
 
+#--------------------------------------------------
+# Swear words and additional stopwords, tf-idf
+#----------------------------------------------------
+
+library(quanteda)
+require(quanteda.textstats)
+require(quanteda.textplots)
+require(quanteda.corpora)
+
+library(magrittr) # needs to be run every time you start R and want to use %>%
+library(dplyr)
+library(textstem)
+require(wordcloud2)
+require(wordcloud)        
+
+
+
+f <- file.choose()
+data <- read.csv(f)
+
+dim(data) # (5750, 4)  --> 5750 rows, 4 columns
+head(data) # view first 6 rows
+str(data)
+summary(data)
+
+# look at some example texts randomly from the dataset 
+data %>% select(lyric) %>% sample_n(4) %>% pull()
+
+
+unique(data$album) # 538 alumns unique
+unique(data$artist) # 21 unique artists in the dataset
+data %>% View()
+
+
+#------------------------------------------------------------------------------------------------------------------
+# Remove swear words
+#----------------------------------------------------------------------------------------------------------------
+swears<-as.character(read.table('./data/swear_words.txt')$col1)
+
+n_swears <- length(readLines('./data/swear_words.txt'));
+n_swears # 82 number of swear words in the file
+
+# These additional stopwords found by preliminary analysis
+additional_stopwords <- c("mmm", "gotta", "beyonc", "hey","em", "huh", "eh", "te", "ohoh",
+                          "yeah", "oh","ya", "yo", "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
+                          "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki","y'all","c'mon", "minaj",
+                          "whoa", "nananana", "rihanna", "eminem", "cardi", "babe", "niggas", "pre", "na", "ella", "la")
+
+
+# Transform original dataset into "tidytext" dataset structure
+tidy_lyrics <- data %>% 
+  mutate(line = row_number()) %>% # to get the row_number the word of the "lyric column" belongs to. So, line column is gnerated such that line 1 refers to the same song the words belonged to
+  unnest_tokens(word, lyric) %>% # to tokenize and reshape the data at the same time ("lyric" is the name of the column in dataset)
+  filter(!word %in% swears) %>% #Remove swear words
+  filter(!word %in%  additional_stopwords) %>% #Remove  additional_stowords
+  anti_join(get_stopwords()) # remove default stop words
+
+tidy_lyrics %>% count(word, sort=TRUE)
+
+tidy_lyrics %>% count(title,word, sort=TRUE) %>% View() #word in each song (in descending order, highest at the top)
+
+#------------------------
+# tf_idf table and plot
+#-------------------------
+
+tidy_lyrics %>% 
+  count(title,word, sort=TRUE) %>%
+  bind_tf_idf(word,title,n)  %>% # to get 3 columns --> "tf" , "idf" and "tf-idf"
+  
+  
+  
+  tidy_lyrics %>% 
+  count(title,word, sort=TRUE) %>%
+  bind_tf_idf(word,title,n)  %>% # to get 3 columns --> "tf" , "idf" and "tf-idf"
+  group_by(title) %>%
+  top_n(10) %>%
+  ungroup %>%
+  mutate(word = reorder(word, tf_idf)) %>%
+  ggplot(aes(word, tf_idf, fill = title)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~title, scales = "free") +
+  coord_flip()
+
+
+
+
+#--------------------------------------------------------------------
+# End of Swear words and additional stopwords, tf-idf
+#--------------------------------------------------------------------
+
 #loading the dataset
 dataset = read.csv("./data/artists_songs.csv")
 
