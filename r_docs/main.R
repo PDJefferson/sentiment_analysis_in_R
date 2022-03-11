@@ -166,22 +166,3 @@ bag_of_words_dataset$rating = factor(labeled_dataset$rating, levels = c(0, 1))
 
 #display bag of words
 create_table_for_bag_of_words(bag_of_words_dataset)
-
-################################################################################
-#training our model
-
-#splitting the data into training set and test set.
-#creating a splitter to split the data in 70% for training set and 30% for
-#the test set
-split = sort(sample(nrow(bag_of_words_dataset), nrow(bag_of_words_dataset)*.7))
-training_set = bag_of_words_dataset[split,]
-test_set = bag_of_words_dataset[-split,]
-
-#training model using random forest classifier
-classifier <- random_forest_classifier(training_set)
-
-#predicting test results
-y_pred = predict(classifier, newdata = test_set[-ncol(test_set)])
-
-# Making the Confusion Matrix to compare results
-confusion_matrix = table(test_set[, ncol(test_set)], y_pred)
