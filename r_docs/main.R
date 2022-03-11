@@ -55,11 +55,6 @@ source("./r_docs/display_tokenize_data.R")
 source("./r_docs/display_bag_of_words_model.R")
 source("./r_docs/display_cleaned_data.R")
 
-#--------------------------------------------------
-# Swear words and additional stopwords, tf-idf
-#----------------------------------------------------
-
-
 
 data <- read.csv("./data/artists_songs.csv")
 
@@ -75,8 +70,8 @@ data <- replace_unicode_chars(data)
 data %>% select(lyric) %>% sample_n(4) %>% pull()
 
 
-unique(data$album) # 538 alumns unique
-unique(data$artist) # 21 unique artists in the dataset
+unique(data$album) # alumns unique
+unique(data$artist) # unique artists in the dataset
 data %>% View()
 
 
@@ -90,7 +85,7 @@ additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em",
                           "huh", "eh", "te", "ohoh", "yeah", "oh","ya", "yo", 
                           "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
                           "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki",
-                          "y'all","c'mon", "minaj", "whoa", "nananana", 
+                          "y'all","c'mon", "minaj", "whoa", "nananana", "yay",
                           "rihanna", "eminem", "cardi", "babe", "niggas", 
                           "pre", "na", "ella", "la", "yonc�")
 
@@ -106,33 +101,6 @@ tidy_lyrics <- data %>%
 tidy_lyrics %>% count(word, sort=TRUE)
 
 tidy_lyrics %>% count(title,word, sort=TRUE) %>% View() #word in each song (in descending order, highest at the top)
-
-#------------------------
-# tf_idf table and plot
-#-------------------------
-
-
-tidy_lyrics %>%
-  count(title,word, sort=TRUE) %>%
-  bind_tf_idf(word,title,n)  # to get 3 columns --> "tf" , "idf" and "tf-idf"
-
- 
-tidy_lyrics %>%
-  #filter(tidy_lyrics$artist == "Ariana Grande") %>%
-  count(title,word, sort=TRUE) %>%
-  slice_max(n, n = 40) %>%
-  bind_tf_idf(word,title,n)  %>% # to get 3 columns --> "tf" , "idf" and "tf-idf"
-  group_by(title) %>%
-  top_n(10) %>%
-  ungroup %>%
-  mutate(word = reorder(word, tf_idf)) %>%
-  ggplot(aes(word, tf_idf, fill = title)) +
-  geom_col(show.legend = FALSE) +
-  facet_wrap(~title, scales = "free") +
-  coord_flip()
-
-
-
 
 #--------------------------------------------------------------------
 # End of Swear words and additional stopwords, tf-idf
@@ -158,6 +126,9 @@ bag_of_words_dataset <- bag_of_words(labeled_dataset,
                                      additional_stopwords,
                                      swears)
 
+head(bag_of_words_dataset)
+
+
 #copy the rating variable to the new dataset
 bag_of_words_dataset$rating = labeled_dataset$rating
 
@@ -165,10 +136,9 @@ bag_of_words_dataset$rating = labeled_dataset$rating
 bag_of_words_dataset$rating = factor(labeled_dataset$rating, levels = c(0, 1))
 
 #display bag of words
-create_table_for_bag_of_words(bag_of_words_dataset)
+# create_table_for_bag_of_words(bag_of_words_dataset)
 
 ################################################################################
-#training our model
 
 #splitting the data into training set and test set.
 #creating a splitter to split the data in 70% for training set and 30% for
@@ -177,11 +147,4 @@ split = sort(sample(nrow(bag_of_words_dataset), nrow(bag_of_words_dataset)*.7))
 training_set = bag_of_words_dataset[split,]
 test_set = bag_of_words_dataset[-split,]
 
-#training model using random forest classifier
-classifier <- random_forest_classifier(training_set)
 
-#predicting test results
-y_pred = predict(classifier, newdata = test_set[-ncol(test_set)])
-
-# Making the Confusion Matrix to compare results
-confusion_matrix = table(test_set[, ncol(test_set)], y_pred)
