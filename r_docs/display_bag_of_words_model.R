@@ -1,7 +1,7 @@
 create_table_for_bag_of_words <- function(bag_of_words_dataset) {
   
   
-  data_temp =  bag_of_words_dataset[1:21,6517:6537]
+  data_temp =  bag_of_words_dataset[1:21,6434:6455]
   
   data_temp %>%
     gt() %>%

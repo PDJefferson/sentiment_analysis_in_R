@@ -24,7 +24,8 @@
 #install.packages('rlang')
 #to create clean tables
 #install.packages('gt')
-
+#adds stop words
+#install.packages("stopwords")
 #load libraries
 library(rlang)
 library(caTools)
@@ -37,38 +38,38 @@ library(stringr)
 library(tidytext)
 library(ggplot2)
 library(gt)
-
+library(quanteda)
+require(quanteda.textstats)
+require(quanteda.textplots)
+require(quanteda.corpora)
+library(magrittr) # needs to be run every time you start R and want to use %>%\
+library(textstem)
+require(wordcloud2)
+require(wordcloud)
+library(stopwords)
 source("./r_docs/replace_unicode_characters.R")
 source("./r_docs/labeling_data.R")
 source("./r_docs/bag_of_words.R")
 source("./r_docs/random_forest_classification.R")
 source("./r_docs/display_tokenize_data.R")
 source("./r_docs/display_bag_of_words_model.R")
+source("./r_docs/display_cleaned_data.R")
 
 #--------------------------------------------------
 # Swear words and additional stopwords, tf-idf
 #----------------------------------------------------
 
-library(quanteda)
-require(quanteda.textstats)
-require(quanteda.textplots)
-require(quanteda.corpora)
-
-library(magrittr) # needs to be run every time you start R and want to use %>%
-library(dplyr)
-library(textstem)
-require(wordcloud2)
-require(wordcloud)        
-
-
 
 f <- file.choose()
 data <- read.csv(f)
 
-dim(data) # (5750, 4)  --> 5750 rows, 4 columns
-head(data) # view first 6 rows
-str(data)
-summary(data)
+#remove unicode characters
+data <- replace_unicode_chars(data)
+
+#get to know the data
+#dim(data) # (5147, 4)  --> 5147 rows, 4 columns
+#str(data)
+#summary(data)
 
 # look at some example texts randomly from the dataset 
 data %>% select(lyric) %>% sample_n(4) %>% pull()
@@ -82,23 +83,21 @@ data %>% View()
 #------------------------------------------------------------------------------------------------------------------
 # Remove swear words
 #----------------------------------------------------------------------------------------------------------------
-swears<-as.character(read.table('./data/swear_words.txt')$col1)
-
-n_swears <- length(readLines('./data/swear_words.txt'));
-n_swears # 82 number of swear words in the file
+swears<-read.csv('./data/swear_words.csv')
 
 # These additional stopwords found by preliminary analysis
-additional_stopwords <- c("mmm", "gotta", "beyonc", "hey","em", "huh", "eh", "te", "ohoh",
+additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em", "huh", "eh", "te", "ohoh",
                           "yeah", "oh","ya", "yo", "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
                           "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki","y'all","c'mon", "minaj",
-                          "whoa", "nananana", "rihanna", "eminem", "cardi", "babe", "niggas", "pre", "na", "ella", "la")
+                          "whoa", "nananana", "rihanna", "eminem", "cardi", "babe", "niggas", "pre", "na", "ella", "la",
+                          "yonc�")
 
 
 # Transform original dataset into "tidytext" dataset structure
 tidy_lyrics <- data %>% 
-  mutate(line = row_number()) %>% # to get the row_number the word of the "lyric column" belongs to. So, line column is gnerated such that line 1 refers to the same song the words belonged to
+  mutate(line = row_number()) %>% # to get the row_number the word of the "lyric column" belongs to. So, line column is generated such that line 1 refers to the same song the words belonged to
   unnest_tokens(word, lyric) %>% # to tokenize and reshape the data at the same time ("lyric" is the name of the column in dataset)
-  filter(!word %in% swears) %>% #Remove swear words
+  filter(!word %in% swears$swear_words) %>% #Remove swear words
   filter(!word %in%  additional_stopwords) %>% #Remove  additional_stowords
   anti_join(get_stopwords()) # remove default stop words
 
@@ -110,14 +109,16 @@ tidy_lyrics %>% count(title,word, sort=TRUE) %>% View() #word in each song (in d
 # tf_idf table and plot
 #-------------------------
 
-tidy_lyrics %>% 
+
+tidy_lyrics %>%
   count(title,word, sort=TRUE) %>%
-  bind_tf_idf(word,title,n)  %>% # to get 3 columns --> "tf" , "idf" and "tf-idf"
-  
-  
-  
-  tidy_lyrics %>% 
+  bind_tf_idf(word,title,n)  # to get 3 columns --> "tf" , "idf" and "tf-idf"
+
+ 
+tidy_lyrics %>%
+  #filter(tidy_lyrics$artist == "Ariana Grande") %>%
   count(title,word, sort=TRUE) %>%
+  slice_max(n, n = 40) %>%
   bind_tf_idf(word,title,n)  %>% # to get 3 columns --> "tf" , "idf" and "tf-idf"
   group_by(title) %>%
   top_n(10) %>%
@@ -141,6 +142,9 @@ dataset = read.csv("./data/artists_songs.csv")
 #remove unicode characters
 dataset <- replace_unicode_chars(dataset)
 
+#display table to display clean dataset
+create_table_to_display_clean_dataset(dataset)
+
 #labeling the data
 labeled_dataset <- label_dataset(dataset)
 
@@ -148,7 +152,9 @@ labeled_dataset <- label_dataset(dataset)
 create_graph_to_display_frequency_of_sentiments(labeled_dataset)
 
 #creating bag of words model to work with the classifier
-bag_of_words_dataset <- bag_of_words(labeled_dataset)
+bag_of_words_dataset <- bag_of_words(labeled_dataset,
+                                     additional_stopwords,
+                                     swears)
 
 #copy the rating variable to the new dataset
 bag_of_words_dataset$rating = labeled_dataset$rating
@@ -158,6 +164,7 @@ bag_of_words_dataset$rating = factor(labeled_dataset$rating, levels = c(0, 1))
 
 #display bag of words
 create_table_for_bag_of_words(bag_of_words_dataset)
+
 ################################################################################
 #training our model
 
