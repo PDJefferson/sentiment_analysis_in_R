@@ -57,7 +57,7 @@ source("./r_docs/display_bag_of_words_model.R")
 source("./r_docs/display_cleaned_data.R")
 
 #--------------------------------------------------
-# Swear words and additional stopwords, tf-idf
+# Swear words and additional stopwords
 #----------------------------------------------------
 data <- read.csv("./data/artists_songs.csv")
 
@@ -108,29 +108,6 @@ tidy_lyrics <- data %>%
 tidy_lyrics %>% count(word, sort=TRUE)
 
 tidy_lyrics %>% count(title,word, sort=TRUE) %>% View() #word in each song (in descending order, highest at the top)
-
-#------------------------
-# tf_idf table and plot
-#-------------------------
-
-tidy_lyrics %>%
-  count(title,word, sort=TRUE) %>%
-  bind_tf_idf(word,title,n)  # to get 3 columns --> "tf" , "idf" and "tf-idf"
-
- 
-tidy_lyrics %>%
-  #filter(tidy_lyrics$artist == "Ariana Grande") %>%
-  count(title,word, sort=TRUE) %>%
-  #slice_max(n, n = 40) %>%
-  bind_tf_idf(word,title,n)  %>% # to get 3 columns --> "tf" , "idf" and "tf-idf"
-  group_by(title) %>%
-  top_n(10) %>%
-  ungroup %>%
-  mutate(word = reorder(word, tf_idf)) %>%
-  ggplot(aes(word, tf_idf, fill = title)) +
-  geom_col(show.legend = FALSE) +
-  facet_wrap(~title, scales = "free") +
-  coord_flip()
 
 
 
