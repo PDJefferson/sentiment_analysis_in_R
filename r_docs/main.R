@@ -60,8 +60,8 @@ source("./r_docs/display_cleaned_data.R")
 #----------------------------------------------------
 
 
-f <- file.choose()
-data <- read.csv(f)
+
+data <- read.csv("./data/artists_songs.csv")
 
 #remove unicode characters
 data <- replace_unicode_chars(data)
@@ -80,17 +80,19 @@ unique(data$artist) # 21 unique artists in the dataset
 data %>% View()
 
 
-#------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Remove swear words
-#----------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 swears<-read.csv('./data/swear_words.csv')
 
 # These additional stopwords found by preliminary analysis
-additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em", "huh", "eh", "te", "ohoh",
-                          "yeah", "oh","ya", "yo", "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
-                          "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki","y'all","c'mon", "minaj",
-                          "whoa", "nananana", "rihanna", "eminem", "cardi", "babe", "niggas", "pre", "na", "ella", "la",
-                          "yonc�")
+additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em", 
+                          "huh", "eh", "te", "ohoh", "yeah", "oh","ya", "yo", 
+                          "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
+                          "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki",
+                          "y'all","c'mon", "minaj", "whoa", "nananana", 
+                          "rihanna", "eminem", "cardi", "babe", "niggas", 
+                          "pre", "na", "ella", "la", "yonc�")
 
 
 # Transform original dataset into "tidytext" dataset structure

@@ -1,6 +1,6 @@
 create_table_to_display_clean_dataset <- function(dataset) {
   
-  data_temp =  data %>%
+  data_temp =  dataset %>%
     sample_n(3) 
   
   data_temp %>%
