@@ -26,7 +26,9 @@
 #install.packages('gt')
 #adds stop words
 #install.packages("stopwords")
+#install.packages('sentimentr')
 #load libraries
+library(sentimentr)
 library(rlang)
 library(caTools)
 library(randomForest)
@@ -47,7 +49,7 @@ library(textstem)
 require(wordcloud2)
 require(wordcloud)
 library(stopwords)
-source("./r_docs/replace_unicode_characters.R")
+source("./r_docs/clean_data.R")
 source("./r_docs/labeling_data.R")
 source("./r_docs/bag_of_words.R")
 source("./r_docs/display_tokenize_data.R")
@@ -57,13 +59,22 @@ source("./r_docs/display_cleaned_data.R")
 #--------------------------------------------------
 # Swear words and additional stopwords, tf-idf
 #----------------------------------------------------
-
-
-
 data <- read.csv("./data/artists_songs.csv")
 
+swears<-read.csv('./data/swear_words.csv')
+
+# These additional stopwords found by preliminary analysis
+additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em", 
+                          "huh", "eh", "te", "ohoh", "yeah", "oh","ya", "yo", 
+                          "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
+                          "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki",
+                          "y'all","c'mon", "minaj", "whoa", "nananana", 
+                          "rihanna", "eminem", "cardi", "babe", "niggas", 
+                          "pre", "na", "ella", "la", "yonc�", "jhen�")
+
+
 #remove unicode characters
-data <- replace_unicode_chars(data)
+data <- clean_data_vars(data)
 
 #get to know the data
 #dim(data) # (5147, 4)  --> 5147 rows, 4 columns
@@ -83,17 +94,6 @@ data %>% View()
 #-------------------------------------------------------------------------------
 # Remove swear words
 #-------------------------------------------------------------------------------
-swears<-read.csv('./data/swear_words.csv')
-
-# These additional stopwords found by preliminary analysis
-additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em", 
-                          "huh", "eh", "te", "ohoh", "yeah", "oh","ya", "yo", 
-                          "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
-                          "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki",
-                          "y'all","c'mon", "minaj", "whoa", "nananana", 
-                          "rihanna", "eminem", "cardi", "babe", "niggas", 
-                          "pre", "na", "ella", "la", "yonc�")
-
 
 
 
@@ -143,8 +143,8 @@ tidy_lyrics %>%
 #loading the dataset
 dataset = read.csv("./data/artists_songs.csv")
 
-#remove unicode characters
-dataset <- replace_unicode_chars(dataset)
+#clean data 
+dataset <- clean_data_vars(dataset)
 
 #display table to display clean dataset
 create_table_to_display_clean_dataset(dataset)
@@ -156,9 +156,7 @@ labeled_dataset <- label_dataset(dataset)
 create_graph_to_display_frequency_of_sentiments(labeled_dataset)
 
 #creating bag of words model to work with the classifier
-bag_of_words_dataset <- bag_of_words(labeled_dataset,
-                                     additional_stopwords,
-                                     swears)
+bag_of_words_dataset <- bag_of_words(labeled_dataset)
 
 #copy the rating variable to the new dataset
 bag_of_words_dataset$rating = labeled_dataset$rating

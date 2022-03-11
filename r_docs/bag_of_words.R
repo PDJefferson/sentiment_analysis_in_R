@@ -1,7 +1,7 @@
 #creating bag of words
 
-bag_of_words <- function(dataset_original, additional_stopwords, swear_words) {
-  
+bag_of_words <- function(dataset_original) {
+ 
   #cleaning up the data
   #vcorpus is a data structuture that will help cleaning
   #the text so we can work with our data using bag of words
@@ -14,27 +14,9 @@ bag_of_words <- function(dataset_original, additional_stopwords, swear_words) {
   corpus_dataset = tm_map(corpus_dataset, removePunctuation)
   #removes the stop words, like the, a,of etc
   corpus_dataset = tm_map(corpus_dataset, removeWords, stopwords())
-  #words that are alike like loved and love will be take it as one
-  #corpus_dataset = tm_map(corpus_dataset, stemDocument)
-  #-------------------------------------------------------------------
-  # Removing personalized stop-words
-  #--------------------------------------------------------------------
-  corpus_dataset <- tm_map(corpus_dataset, removeWords, additional_stopwords)
-  #-------------------------------------------------------------------
-  # remove swear words 
-  #-----------------------------------------------------------------------
-  corpus_dataset <- tm_map(corpus_dataset, removeWords, swear_words$swear_words)
-  # --------------------------------------------------------------------
-  # substr(corpus_dataset[[1]]$content, 1, 1000) # Cleaned text --> print
-  #---------------------------------------------------
-  # Lemmatization
-  #--------------------------------------------------
-  corpus_dataset <- tm_map(corpus_dataset,  lemmatize_strings)
-  corpus_dataset <- tm_map(corpus_dataset, PlainTextDocument)
-
   #removes white spaces and extra spaces
   corpus_dataset = tm_map(corpus_dataset, stripWhitespace)
-  #----------------------------------------------------------------------------
+ 
   
   #Creating the Bag of Words model.
   #creates a table with columns that are all the words that 
