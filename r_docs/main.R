@@ -80,6 +80,7 @@ unique(data$artist) # 21 unique artists in the dataset
 data %>% View()
 
 
+
 #-------------------------------------------------------------------------------
 # Remove swear words
 #-------------------------------------------------------------------------------
@@ -93,6 +94,8 @@ additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em",
                           "y'all","c'mon", "minaj", "whoa", "nananana", 
                           "rihanna", "eminem", "cardi", "babe", "niggas", 
                           "pre", "na", "ella", "la", "yonc�")
+
+
 
 
 # Transform original dataset into "tidytext" dataset structure
@@ -110,7 +113,7 @@ tidy_lyrics %>% count(title,word, sort=TRUE) %>% View() #word in each song (in d
 #------------------------
 # tf_idf table and plot
 #-------------------------
-
+bag_of_words_data <-  bag_of_words(data,additional_stopwords , swears)
 
 tidy_lyrics %>%
   count(title,word, sort=TRUE) %>%
@@ -120,7 +123,7 @@ tidy_lyrics %>%
 tidy_lyrics %>%
   #filter(tidy_lyrics$artist == "Ariana Grande") %>%
   count(title,word, sort=TRUE) %>%
-  slice_max(n, n = 40) %>%
+  #slice_max(n, n = 40) %>%
   bind_tf_idf(word,title,n)  %>% # to get 3 columns --> "tf" , "idf" and "tf-idf"
   group_by(title) %>%
   top_n(10) %>%
