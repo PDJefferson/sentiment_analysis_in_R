@@ -8,17 +8,13 @@ bag_of_words <- function(dataset_original, additional_stopwords, swear_words) {
   corpus_dataset = VCorpus(VectorSource(dataset_original$lyric))
   #puts all the words in lowercases
   corpus_dataset = tm_map(corpus_dataset, content_transformer(tolower))
-  
   #removes all the numbers in our text
   corpus_dataset = tm_map(corpus_dataset, removeNumbers)
-  
   #removes all the punctuations in our text
   corpus_dataset = tm_map(corpus_dataset, removePunctuation)
-  
   #removes the stop words, like the, a,of etc
   corpus_dataset = tm_map(corpus_dataset, removeWords, stopwords())
   #words that are alike like loved and love will be take it as one
-  
   #corpus_dataset = tm_map(corpus_dataset, stemDocument)
   #-------------------------------------------------------------------
   # Removing personalized stop-words
