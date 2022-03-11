@@ -112,7 +112,6 @@ tidy_lyrics %>% count(title,word, sort=TRUE) %>% View() #word in each song (in d
 #------------------------
 # tf_idf table and plot
 #-------------------------
-bag_of_words_data <-  bag_of_words(data,additional_stopwords , swears)
 
 tidy_lyrics %>%
   count(title,word, sort=TRUE) %>%
