@@ -7,7 +7,7 @@ clean_data_vars <- function(dataset) {
     mutate(lyric =  lyric$sentence)
  
   #remove additional stop words
-  #adds a | to separate each word as trimws uses that to recognize each word
+  #adds a | to separate each word as trimes uses that to recognize each word
   #separately.
   additional_words <- paste(additional_stopwords, collapse = "|")
   dataset <- dataset %>%
