@@ -28,7 +28,9 @@ clean_data_vars <- function(dataset) {
     mutate(artist= chr_unserialise_unicode(artist)
            ,title = chr_unserialise_unicode(title)
            ,lyric = chr_unserialise_unicode(lyric)
-           ,album = chr_unserialise_unicode(album))
+           ,album = chr_unserialise_unicode(album)) %>%
+    mutate(lyric = gsub("\uFFFD", "" , lyric, fixed =TRUE)) %>%
+    mutate(lyric = str_remove(lyric, "<U+FFFD"))
   
   return(dataset)
   
