@@ -1,4 +1,4 @@
-clean_data_vars <- function(dataset) {
+remove_redundancies_and_bad_Words <- function(dataset) {
   
   #remove swear words from the dataset
   dataset <- dataset %>%
@@ -14,11 +14,6 @@ clean_data_vars <- function(dataset) {
     mutate(lyric = trimws(sub(additional_words, "" ,lyric)))
   
   
-  #lemmatize words, which means reduce the word to its most natural form
-  dataset <- dataset %>%
-    mutate(lyric = lemmatize_strings(lyric))
-  
-  
   #remove songs with few lyrics
   few_lyrics_remover = ifelse(nchar(dataset$lyric) < 350, TRUE, FALSE)
   dataset = dataset[!few_lyrics_remover,]
@@ -30,7 +25,7 @@ clean_data_vars <- function(dataset) {
            ,lyric = chr_unserialise_unicode(lyric)
            ,album = chr_unserialise_unicode(album)) %>%
     mutate(lyric = gsub("\uFFFD", "" , lyric, fixed =TRUE)) %>%
-    mutate(lyric = str_remove(lyric, "<U+FFFD"))
+    mutate(lyric = str_remove(lyric, "<U+FFFD>"))
   
   return(dataset)
   

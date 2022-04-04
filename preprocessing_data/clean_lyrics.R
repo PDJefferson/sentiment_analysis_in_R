@@ -1,4 +1,5 @@
 clean_lyrics <- function(Corpus_data, remove_sw = FALSE, my_stopwords = NULL, swear_wrd = NULL, lemmatize = FALSE, stemming = FALSE){
+  
   # Correcting abbreviations
   correct_verb <- content_transformer(function (x , pattern) gsub(pattern, "ing", x))
   Corpus_data <- tm_map(Corpus_data, correct_verb, "in'")
@@ -11,7 +12,6 @@ clean_lyrics <- function(Corpus_data, remove_sw = FALSE, my_stopwords = NULL, sw
     Corpus_data <- tm_map(Corpus_data, removeWords, c(stopwords("english"), "come on"))
   }
 
-  
   Corpus_data <- tm_map(Corpus_data, removePunctuation)
   
   # Eliminating extra white spaces
@@ -36,9 +36,5 @@ clean_lyrics <- function(Corpus_data, remove_sw = FALSE, my_stopwords = NULL, sw
     Corpus_data <- tm_map(Corpus_data,stemDocument)
   }
   
-  
-  
   return(Corpus_data)
-  
-  
 }
