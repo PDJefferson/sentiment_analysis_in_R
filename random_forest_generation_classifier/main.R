@@ -1,6 +1,7 @@
 needed_packages <- c("dplyr", "stringr", "tidytext", "tidyr", "textdata", 
                      "tm", "SnowballC", "caTools", "rlang", "gt", "stopwords",
-                     "sentimentr", "tidytext", "magrittr", "textstem", "randomForest")
+                     "sentimentr", "tidytext", "magrittr", "textstem", "randomForest"
+                    )
 
 #install packages in case they are not install yet
 #install.packages(needed_packages)
@@ -11,7 +12,6 @@ lapply(needed_packages, require, character.only = TRUE)
 source("./preprocessing_data/remove_redundancies_and_bad_words.R")
 source("./preprocessing_data/labeling_data.R")
 source("./preprocessing_data/bag_of_words.R")
-source("./preprocessing_data/clean_lyrics.R")
 source("./random_forest_generation_classifier/random_forest_classification.R")
 
 swears<-read.csv("./data/swear_words.csv")
@@ -28,16 +28,11 @@ additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em",
 #loading the data
 dataset <- read.csv("./data/artists_songs.csv")
 
-dataset <- remove_redundancies_and_bad_Words(dataset)
-
-#label the lyrics column based on an overall net sentiment
-labeled_dataset <- label_dataset(dataset)
-
-#creating bag of words model to work with the classifier
-bag_of_words_dataset <- bag_of_words(labeled_dataset)
+dataset <- remove_redundancies_and_swear_Words(dataset)
 
 #copy the rating variable to the new dataset
 bag_of_words_dataset$rating = labeled_dataset$rating
+
 
 # Encoding the target feature as factor
 bag_of_words_dataset$rating = factor(labeled_dataset$rating, levels = c(0, 1))
@@ -57,5 +52,39 @@ classifier <- random_forest_classifier(training_set)
 #predicting test results
 y_pred = predict(classifier, newdata = test_set[-ncol(test_set)])
 
-# Making the Confusion Matrix to compare results
+#Making the Confusion Matrix to compare results
 confusion_matrix = table(test_set[, ncol(test_set)], y_pred)
+
+#Accuracy shows the amount of correctly predictions
+accuracy_val = multiply_by(divide_by(confusion_matrix[1] + confusion_matrix[4], 
+                   nrow(test_set))
+                   , 100) 
+cat(accuracy_val, "% lyrics label were predicted correctly", sep = '')
+
+#Precision shows the amount of predicted positive songs that were correctly
+precision_val = multiply_by(divide_by(confusion_matrix[1], 
+                                      confusion_matrix[2] + confusion_matrix[1])
+                            , 100)
+
+cat(precision_val, "% of lyrics that aroused overall positive feelings from the 
+predicted positives, were predicted correctly", sep = '')
+
+#sensitivity shows the amount of positive overall examples that were predicted
+#accurately
+sensitivity = multiply_by(divide_by(confusion_matrix[1], 
+                                    confusion_matrix[3] + confusion_matrix[1])
+                          , 100)
+cat(sensitivity, "% of lyrics that aroused positive feelings only, 
+    were predicted accurrately", sep = '')
+
+#fp rate shows the amount of negative values predictive incorrectly
+fp_rate = multiply_by(divide_by(confusion_matrix[2], 
+                                confusion_matrix[2] + confusion_matrix[4])
+                      , 100)
+cat(fp_rate, "% of lyrics that were predicted as arousing negative feelings, 
+    were predicted wrongly", sep = '')
+
+#specificity show the amount of negative feeling songs that were predicted correctly
+specificity = 100 - fp_rate
+cat(precision_val, "% of lyrics that aroused overall negative feelings from the 
+predicted negatives, were predicted correctly", sep = '')
