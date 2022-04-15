@@ -20,9 +20,6 @@ bag_of_words <- function(dataset_original) {
   corpus_dataset = tm_map(corpus_dataset, removeWords, stopwords())
   #removes white spaces and extra spaces
   corpus_dataset = tm_map(corpus_dataset, stripWhitespace)
-  #lemmatize words, which means reduce the word to its most natural form
-  corpus_dataset = tm_map(corpus_dataset, lemmatize_strings)
-  corpus_dataset = tm_map(corpus_dataset, PlainTextDocument)
   
   #Creating the Bag of Words model.
   #creates a table with columns that are all the words that can be found
@@ -35,7 +32,7 @@ bag_of_words <- function(dataset_original) {
   #removes the words that do not appear frequently, 
   #filter non-frequent words that
   #don't add any meaning to our data
-  dtm = removeSparseTerms(dtm, 0.999)
+  dtm = removeSparseTerms(dtm, 0.996)
   
   #creating a vector to work with the algorithm
   #we use as.data.frame to transform in this case a matrix to a vector
