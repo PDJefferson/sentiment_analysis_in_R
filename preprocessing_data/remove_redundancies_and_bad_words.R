@@ -1,4 +1,4 @@
-remove_redundancies_and_swear_Words <- function(dataset) {
+remove_redundancies_and_bad_Words <- function(dataset) {
   
   #replace unicode characters with its ascii equivalent
   dataset <- dataset %>%

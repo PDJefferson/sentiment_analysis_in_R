@@ -29,7 +29,7 @@ additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em",
 dataset <- read.csv("./data/artists_songs.csv")
 
 #replaces unicodes for their ascii values and removes redudancies
-dataset <- remove_redundancies_and_swear_Words(dataset)
+dataset <- remove_redundancies_and_bad_Words(dataset)
 
 #labels the dataset
 labeled_dataset <- label_dataset(dataset)
@@ -37,7 +37,7 @@ labeled_dataset <- label_dataset(dataset)
 #creates the bag of words model
 bag_of_words_dataset = bag_of_words(labeled_dataset)
 
-#copy the rating variable to the new dataset
+#copying the rating var into the bof dataset
 bag_of_words_dataset$rating = labeled_dataset$rating
 
 # Encoding the target feature as factor
@@ -92,5 +92,5 @@ cat(fp_rate, "% of lyrics that were predicted as arousing positive feelings,
 
 #specificity show the amount of negative feeling songs that were predicted correctly
 specificity = 100 - fp_rate
-cat(precision_val, "% of lyrics that aroused overall positive feelings from the 
+cat(specificity, "% of lyrics that aroused overall positive feelings from the 
 predicted negatives, were predicted correctly", sep = '')
