@@ -1,12 +1,12 @@
 needed_packages <- c("dplyr", "stringr", "tidytext", "tidyr", "textdata", 
                      "tm", "SnowballC", "caTools", "rlang", "gt", "stopwords",
                      "sentimentr", "tidytext", "magrittr", "textstem", "randomForest"
-                    )
+                    ,"qdap")
 
 #install packages in case they are not install yet
 #install.packages(needed_packages)
-
-#load packages
+  
+#load packages 
 lapply(needed_packages, require, character.only = TRUE)
 
 source("./preprocessing_data/remove_redundancies_and_bad_words.R")
@@ -14,16 +14,16 @@ source("./preprocessing_data/labeling_data.R")
 source("./preprocessing_data/bag_of_words.R")
 source("./random_forest_generation_classifier/random_forest_classification.R")
 
-swears<-read.csv("./data/swear_words.csv")
+swears <- read.csv("./data/swear_words.csv")
 
 # These additional stopwords found by preliminary analysis
-additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em", 
+additional_stopwords <- c("mmm", "gotta", "beyonce", "beyonc�", "hey","em", 
                           "huh", "eh", "te", "ohoh", "yeah", "oh","ya", "yo", 
                           "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
                           "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki",
-                          "y'all","c'mon", "minaj", "whoa", "nananana", 
+                          "imma","y'all","c'mon", "minaj", "whoa", "nananana", 
                           "rihanna", "eminem", "cardi", "niggas", 
-                          "pre", "na", "ella", "la", "yonc�", "jhen�")
+                          "pre", "Pre", "na", "ella", "la", "yonc�", "jhen�" )
 
 #loading the data
 dataset <- read.csv("./data/artists_songs.csv")
@@ -33,6 +33,7 @@ dataset <- remove_redundancies_and_bad_Words(dataset)
 
 #labels the dataset
 labeled_dataset <- label_dataset(dataset)
+
 
 #creates the bag of words model
 bag_of_words_dataset = bag_of_words(labeled_dataset)

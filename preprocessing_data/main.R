@@ -41,7 +41,7 @@ library(stopwords)
 
 needed_packages <- c("dplyr", "stringr", "tidytext", "tidyr", "textdata", 
                        "tm", "SnowballC", "caTools", "rlang", "gt", "stopwords",
-                     "sentimentr", "tidytext", "magrittr", "textstem")
+                     "sentimentr", "tidytext", "magrittr", "textstem","qdap")
 #install packages in case they are not install yet
 #install.packages(needed_packages)
 
