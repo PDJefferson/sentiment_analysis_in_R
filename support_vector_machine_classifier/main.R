@@ -68,7 +68,7 @@ cv = lapply(folds,function(x) {
   return(accuracy)
 })
 
-
+#get better configurations for svm 
 classifier = train(y = training_set$rating, x = training_set[-ncol(training_set)], 
                    data = training_set[-ncol(training_set)],
                    method = "svmLinearWeights")

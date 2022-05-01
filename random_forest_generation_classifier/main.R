@@ -1,66 +1,62 @@
 needed_packages <- c("dplyr", "stringr", "tidytext", "tidyr", "textdata", 
-                     "tm", "SnowballC", "caTools", "rlang", "gt", "stopwords",
-                     "sentimentr", "tidytext", "magrittr", "textstem", "randomForest"
-                    ,"qdap")
+                     "tm", "caTools", "gt","tidytext", "magrittr","randomForest"
+                    ,"qdap", "doParallel", "superml", "devtools", "ROCR", "cvms")
 
 #install packages in case they are not install yet
-#install.packages(needed_packages)
-  
+install.packages(needed_packages)
+
 #load packages 
 lapply(needed_packages, require, character.only = TRUE)
 
-source("./preprocessing_data/remove_redundancies_and_bad_words.R")
-source("./preprocessing_data/labeling_data.R")
-source("./preprocessing_data/bag_of_words.R")
 source("./random_forest_generation_classifier/random_forest_classification.R")
 
-swears <- read.csv("./data/swear_words.csv")
-
-# These additional stopwords found by preliminary analysis
-additional_stopwords <- c("mmm", "gotta", "beyonce", "beyonc�", "hey","em", 
-                          "huh", "eh", "te", "ohoh", "yeah", "oh","ya", "yo", 
-                          "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
-                          "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki",
-                          "imma","y'all","c'mon", "minaj", "whoa", "nananana", 
-                          "rihanna", "eminem", "cardi", "niggas", 
-                          "pre", "Pre", "na", "ella", "la", "yonc�", "jhen�" )
-
-#loading the data
-dataset <- read.csv("./data/artists_songs.csv")
-
-#replaces unicodes for their ascii values and removes redudancies
-dataset <- remove_redundancies_and_bad_Words(dataset)
-
-#labels the dataset
-labeled_dataset <- label_dataset(dataset)
-
-
-#creates the bag of words model
-bag_of_words_dataset = bag_of_words(labeled_dataset)
-
-#copying the rating var into the bof dataset
-bag_of_words_dataset$rating = labeled_dataset$rating
+#loading the preprocessed data
+tf_idf_dataset <- read.csv("./data/tf_idf_dataset.csv")
 
 # Encoding the target feature as factor
-bag_of_words_dataset$rating = factor(labeled_dataset$rating, levels = c(0, 1))
-
-#training  model
+tf_idf_dataset$rating = factor(tf_idf_dataset$rating, 
+                                     levels = c(0, 1))
 
 #splitting the data into training set and test set.
 #creating a splitter to split the data in 80% for training set and 20% for
 #the test set
-split = sort(sample(nrow(bag_of_words_dataset), nrow(bag_of_words_dataset)*.8))
-training_set = bag_of_words_dataset[split,]
-test_set = bag_of_words_dataset[-split,]
+split = sort(sample(nrow(tf_idf_dataset), nrow(tf_idf_dataset)*.8))
+training_set = tf_idf_dataset[split,]
+test_set = tf_idf_dataset[-split,]
+
+
+#run model with parallel processing using doparallel library to speed up the
+#Process
+
+cl <- makePSOCKcluster(detectCores() - 1)
+registerDoParallel(cl)
+
+start.time <- proc.time()
 
 #training model using random forest classifier
 classifier <- random_forest_classifier(training_set)
 
+stop.time <- proc.time()
+
+run.time <- stop.time - start.time
+print(run.time)
+
+stopCluster(cl)
+
+#get better settings for random forest classifier, takes a lot to compute values
+classifier_best_setting = train(y = training_set$rating, 
+                                x = training_set[-ncol(training_set)], 
+                   data = training_set[-ncol(training_set)],
+                   method = "rf")
+
 #predicting test results
-y_pred = predict(classifier, newdata = test_set[-ncol(test_set)])
+y_pred_test_set = predict(classifier, newdata = test_set[-ncol(test_set)])
+
+#predictin training_set results
+pred_training_set = predict(classifier, newdata = training_set[-ncol(training_set)])
 
 #Making the Confusion Matrix to compare results
-confusion_matrix = table(test_set[, ncol(test_set)], y_pred)
+confusion_matrix = table("target" = test_set$rating, "predicted" = y_pred)
 
 #Accuracy shows the amount of correctly predictions
 accuracy_val = multiply_by(divide_by(confusion_matrix[1] + confusion_matrix[4], 
@@ -95,3 +91,42 @@ cat(fp_rate, "% of lyrics that were predicted as arousing positive feelings,
 specificity = 100 - fp_rate
 cat(specificity, "% of lyrics that aroused overall positive feelings from the 
 predicted negatives, were predicted correctly", sep = '')
+
+#plot confusion matrix for test set
+cfm <- as_tibble(confusion_matrix)
+
+
+plot_confusion_matrix(cfm,
+                      target_col = "target", 
+                      prediction_col = "predicted",
+                      counts_col = "n")
+
+#confusion matrix for training set
+cm_training_set = table("target" = training_set$rating ,
+                        "prediction" = pred_training_set)
+
+
+cfm1 <- as_tibble(cm_training_set)
+
+
+plot_confusion_matrix(cfm1, 
+                      target_col = "target", 
+                      prediction_col = "prediction",
+                      counts_col = "n")
+
+predictions <- as.numeric(predict(classifier, 
+                                  test_set[-ncol(test_set)], 
+                                  type = 'response'))
+
+#plot other evaluation methods
+precrec_obj <- evalmod(scores = predictions, 
+                       labels = test_set$rating, 
+                       mode ="basic")
+autoplot(precrec_obj)
+
+#plot roc curve
+pred <- prediction(predictions = as.numeric(y_pred_test_set), labels = as.numeric(test_set$rating))
+perf <- performance(pred,"tpr","fpr")
+
+plot(perf,colorize=TRUE) +
+  title("ROC CURVE")
