@@ -1,95 +1,95 @@
-#import libraries 
-#to do filtering and processing of our data
-#install.packages("dplyr")
-#to work with strings in a convenient and easier fashion
-#install.packages("stringr")
-#creates the structure for our tidy text data 
-#install.packages("tidytext")
-#to apply tokenization in our data
-#install.packages("tidyr")
-#to download the sentiment data
-#install.packages("textdata")
-#to plot the data into meaningful graphs
-#install.packages("ggplot2")
-#to help working with text and cleaning of the data
-# install.packages('tm')
-#to remove the stemming words
-# install.packages('SnowballC')
-#to work with the classifier
-# install.packages('randomForest')
-#to split the data randomly
-# install.packages('caTools')
-#to convert unicode to utf-8 values/character
-#install.packages('rlang')
-#to create clean tables
-#install.packages('gt')
-#adds stop words
-#install.packages("stopwords")
-#install.packages('sentimentr')
-#load libraries
-#get to know the data_library(sentimentr)
-library(rlang)
-library(caTools)
-library(tm)
-library(SnowballC)
-library(tidyr)
-library(dplyr)
-library(stringr)  
-library(tidytext)
-library(textstem)
-library(stopwords)
-
 needed_packages <- c("dplyr", "stringr", "tidytext", "tidyr", "textdata", 
-                       "tm", "SnowballC", "caTools", "rlang", "gt", "stopwords",
-                     "sentimentr", "tidytext", "magrittr", "textstem","qdap")
+                      "tm", "SnowballC", "caTools", "rlang", "gt", "stopwords",
+                     "sentimentr", "tidytext", "magrittr", "textstem","qdap", 
+                     "doParallel", "devtools", "cld2", "superml")
 #install packages in case they are not install yet
 #install.packages(needed_packages)
+#devtools::install_github("saraswatmks/superml")
+#install.packages("superml", dependencies=TRUE)
 
 #load packages
 lapply(needed_packages, require, character.only = TRUE)
 
 source("./preprocessing_data/remove_redundancies_and_bad_words.R")
 source("./preprocessing_data/labeling_data.R")
-source("./preprocessing_data/bag_of_words.R")
+source("./preprocessing_data/tf_idf_model.R")
 source("./preprocessing_data/clean_lyrics.R")
 
 #-------------------------------------------------------------------------------
 # Swear words and additional stopwords
 #-------------------------------------------------------------------------------
 #load dataset
-data <- read.csv("./data/artists_songs.csv")
+data <- read.csv("./data/labeled_lyrics_cleaned.csv")
 
 
 swears<-read.csv("./data/swear_words.csv")
 
-
 # These additional stopwords found by preliminary analysis
-additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em", 
+additional_stopwords <- c("mmm", "gotta", "beyoncé", "beyonc�", "hey","em", 
                           "huh", "eh", "te", "ohoh", "yeah", "oh","ya", "yo", 
                           "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
                           "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki",
-                          "y'all","c'mon", "minaj", "whoa", "nananana", 
-                          "rihanna", "eminem", "cardi", "babe", "niggas", 
-                          "pre", "na", "ella", "la", "yonc�", "jhen�")
+                          "imma","y'all","c'mon", "minaj", "whoa", "nananana", 
+                          "rihanna", "eminem", "cardi", "niggas", 
+                          "pre", "Pre", "na", "ella", "la", "yonc�", "jhen�" ,
+                          "taylor")
 
 
-#remove unicode characters
+#change the labels of the data
+data <- data %>%
+  transmute(artist = artist
+            ,lyric = data$seq
+            ,title = song
+            ,rating = ifelse(label >= 0.67 ,
+                             1 , 
+                             ifelse(label <= 0.33, 0,  label)))
+
+
+data <- data %>%
+  filter(rating == 1 | rating == 0)
+
+cl <- makePSOCKcluster(detectCores() - 1)
+registerDoParallel(cl)
+
+#removes redudancies
 data <- remove_redundancies_and_bad_Words(data)
+
+stopCluster(cl)
+
+#get only overall positive songs
+positive_songs <- data %>%
+  filter(rating == 1)
+
+#get only overall negative songs
+negative_songs <- data %>%
+  filter(rating == 0)
+
+positive_songs <- sample_n(positive_songs , 7500)
+negative_songs <- sample_n(negative_songs, 7500)
+
+#to get a perfectly balanced amount of positive and negative songs
+data <- rbind(positive_songs, negative_songs)
+
+#shuffles the data
+data = data[sample(1:nrow(data)), ]
 
 dataset <- data
 data1 <- data
 
+write.csv(dataset, 
+          "./data/cleaned_15k_dataset.csv", 
+          row.names = FALSE)
+
 #general information
 
-dim(data) # (5137, 4)  --> 5137 rows, 4 columns
+dim(data) # (15000, 4)  --> 15000 rows, 4 columns
 str(data)
 summary(data)
 
 # look at some example texts randomly from the dataset 
 data %>% select(lyric) %>% sample_n(4) %>% pull()
 
-unique(data$album) # 527 
-unique(data$artist) # 20 unique artists in the dataset
+unique(data$artist) # 1000+ unique artists in the dataset
 data %>% View()
 
 #------------------------------------------------------------------------------
@@ -153,15 +153,16 @@ Song_Lyrics_dtm1 <- TermDocumentMatrix(Lemmatized_Lyrics)
 dtm_m1 <- as.matrix(Song_Lyrics_dtm1)
 dim(dtm_m1) # Dimensions of the term-document matrix
 
+#creating tf_idf model to work with the classifier
+tf_idf_dataset <- tf_idf_vectorizer(dataset)
 
-#label the lyrics column based on an overall net sentiment
-labeled_dataset <- label_dataset(dataset)
+#copy the dependent feature to the new dataset
+tf_idf_dataset$rating = dataset$rating
 
-#creating bag of words model to work with the classifier
-bag_of_words_dataset <- bag_of_words(labeled_dataset)
+#Encoding the dependent feature as factor
+tf_idf_dataset$rating = factor(tf_idf_dataset$rating, 
+                                     levels = c(0, 1))
 
-#copy the rating variable to the new dataset
-bag_of_words_dataset$rating = labeled_dataset$rating
-
-# Encoding the target feature as factor
-bag_of_words_dataset$rating = factor(labeled_dataset$rating, levels = c(0, 1))
+write.csv(tf_idf_dataset, 
+          "./data/tf_idf_dataset.csv",
+          row.names = FALSE)

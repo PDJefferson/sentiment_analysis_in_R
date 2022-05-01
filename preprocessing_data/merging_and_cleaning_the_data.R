@@ -43,18 +43,12 @@ replacing_empty_spaces_with_unknown <- function(temp_obj) {
 replacing_symbols_with_empty_spots <- function(temp_obj) {
   
   refined_temp_obj_dataset <- temp_obj  %>%
-    transmute(artist = str_replace(string = Artist, 
-                                       pattern = "[[:punct:]]" , 
-                                       replacement =  "")
-              ,title = str_replace(string = Title , 
-                                       pattern = "[[:punct:]]" , 
-                                       replacement =  "")
-              ,lyric = str_replace(string = Lyric, 
-                                       pattern = "[[:punct:]]" , 
-                                       replacement =  "")
-              ,album = str_replace(string = Album, 
-                                       pattern = "[[:punct:]]" , 
-                                       replacement =  ""))
+    transmute(artist = Artist
+              ,title = str_remove_all(string = Title , 
+                                       pattern = "[[:punct:]]")
+              ,lyric = Lyric
+              ,album = str_remove_all(string = Album, 
+                                       pattern = "[[:punct:]]"))
   
   refined_temp_obj_dataset <- replacing_empty_spaces_with_unknown(refined_temp_obj_dataset)
   
@@ -112,7 +106,7 @@ refined_artists_dataset <- rbind(refined_ariana_grande_dataset,
 #writing to a csv fill. Empty string will have the form of unicode zero width
 #space,therefore, it needs to be clean on the preprocessing step of the data
 write.csv(refined_artists_dataset, 
-          "your directory path\\artists_songs.csv",
+          "C:\\Users\\jeffe\\OneDrive\\Desktop\\COMP541\\project\\sentiment_analysis_in_R\\data\\artists_songs.csv",
           row.names = FALSE)
 
 

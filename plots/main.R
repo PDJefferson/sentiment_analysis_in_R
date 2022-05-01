@@ -4,7 +4,9 @@ needed_packages <- c("dplyr", "stringr", "tidytext", "tidyr", "textdata",
                      "sentimentr", "htmlwidgets", "webshot", "kableExtra", 
                      "wordcloud", "wordcloud2", "magrittr", "ggplot2", "textstem")
 
-install.packages(needed_packages)
+#uncomment in case these packages are not available
+#install.packages(needed_packages)
+
 lapply(needed_packages, require, character.only = TRUE)
 
 #loading r scripts
@@ -14,9 +16,8 @@ source("./preprocessing_data/bag_of_words.R")
 source("./preprocessing_data/clean_lyrics.R")
 source("./plots/display_bag_of_words_model.R")
 source("./plots/display_cleaned_data.R")
-source("./plots/display_tokenize_data.R")
 
-swears<-read.csv("./data/swear_words.csv")
+swears<-read.csv("./data/labeled_lyrics_cleaned.csv")
 
 # These additional stopwords found by preliminary analysis
 additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em", 
@@ -28,10 +29,29 @@ additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em",
                           "pre", "na", "ella", "la", "yonc�", "jhen�")
 
 #loading the data
-dataset <- read.csv("./data/artists_songs.csv")
+dataset <- read.csv("./data/labeled_lyrics_cleaned.csv")
 
-#cleaning dataset
+#change the labels of the data
+dataset <- dataset %>%
+  transmute(artist = artist
+            ,lyric = dataset$seq
+            ,title = song
+            ,rating = ifelse(label >= 0.67 ,
+                             1 , 
+                             ifelse(label <= 0.33, 0,  label)))
+
+dataset <- data %>%
+  filter(rating == 1 | rating == 0)
+
+cl <- makePSOCKcluster(detectCores() - 1)
+registerDoParallel(cl)
+
+#removes redudancies
 dataset <- remove_redundancies_and_bad_Words(dataset)
+
+stopCluster(cl)
+
+dataset <- sample_n(dataset, 15000)
 
 #copying the data to a new vector
 dataset1 <- dataset
@@ -39,23 +59,14 @@ dataset1 <- dataset
 #display clean dataset in a table
 create_table_to_display_clean_dataset(dataset)
 
-#label the lyrics column based on an overall net sentiment
-labeled_dataset <- label_dataset(dataset)
-
 #display tokenize data
-create_graph_to_display_frequency_of_sentiments(labeled_dataset)
+#create_graph_to_display_frequency_of_sentiments(labeled_dataset)
 
-#creating bag of words model to work with the classifier
-bag_of_words_dataset <- bag_of_words(labeled_dataset)
+#loading tf_idf model to work with the classifier
+tf_idf_model <- read.csv("./data/tf_idf_dataset.csv")
 
-#copy the rating variable to the new dataset
-bag_of_words_dataset$rating = labeled_dataset$rating
-
-# Encoding the target feature as factor
-bag_of_words_dataset$rating = factor(labeled_dataset$rating, levels = c(0, 1))
-
-#display bag of words
-create_table_for_bag_of_words(bag_of_words_dataset)
+#display tf_idf
+create_table_for_bag_of_words(tf_idf_model)
 
 #vector to corpus data structure to clean data in an efficient manner
 Corpus_data <- Corpus(VectorSource(dataset1$lyric))

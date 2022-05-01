@@ -1,0 +1,43 @@
+#creating the tf_idf_vector model
+tf_idf_vectorizer <- function(dataset_original) {
+ 
+  #cleaning up the data
+  #vcorpus is a data structure that will help cleaning
+  #the text so we can work with our data using the bag of words model
+  corpus_dataset = VCorpus(VectorSource(dataset_original$lyric))
+
+  #puts all the words in lowercases
+  corpus_dataset = tm_map(corpus_dataset, content_transformer(tolower))
+  #removes all the numbers in the text
+  corpus_dataset = tm_map(corpus_dataset, removeNumbers)
+  #removes all the punctuations in our text
+  corpus_dataset = tm_map(corpus_dataset, removePunctuation)
+  #removes the stop words, like the, a,of etc
+  corpus_dataset = tm_map(corpus_dataset, removeWords, stopwords())
+  #removes white spaces and extra spaces
+  corpus_dataset = tm_map(corpus_dataset, stripWhitespace)
+  
+  vector = data.frame(lyric = sapply(corpus_dataset, as.character), 
+                      stringsAsFactors = FALSE)
+  
+  #creates tf-idf vectorizer. only takes into account features that appear at
+  #leat .0045 in entire data to reduce dimensionality
+  tfv <- TfIdfVectorizer$new(min_df = 0.0050, remove_stopwords = FALSE)
+  
+  cl <- makePSOCKcluster(detectCores() - 1)
+  registerDoParallel(cl)
+  
+  # we fit on train data
+  tfv$fit(vector$lyric)
+   
+  #tranforms the values into tf-idf values
+  tf_matrix <- tfv$transform(vector$lyric)
+  
+  stopCluster(cl)
+  
+  #creating a vector to work with the algorithm
+  #we use as.data.frame to transform in this case a matrix to a vector
+  dataset = as.data.frame(as.matrix(tf_matrix))
+  
+  return(dataset)
+}
