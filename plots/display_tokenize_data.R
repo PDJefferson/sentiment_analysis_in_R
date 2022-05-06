@@ -8,9 +8,8 @@ create_graph_to_display_frequency_of_sentiments <- function(dataset) {
     ungroup() %>%
     unnest_tokens(word, lyric)
     
-  
-  #we get the words that have in common with bing and use the linen number to 
-  #to keep track of the song. we separate the filling positive and negative by
+  #we get the words that have in common with bing and use the line number to 
+  #to keep track of the song. we separate the sentiment positive and negative by
   #pivot wider and finally we get the net sentiment of the lyric
   prepare_tokenized_dataset <- tokenized_dataset %>%
     inner_join(get_sentiments("bing")) %>%

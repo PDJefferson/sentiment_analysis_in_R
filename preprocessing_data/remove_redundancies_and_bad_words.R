@@ -44,6 +44,7 @@ remove_redundancies_and_bad_Words <- function(dataset) {
     mutate(lyric = removeNumbers(lyric)) %>%
     mutate(lyric = lemmatize_strings(lyric)) %>%
     mutate(lyric = sapply(lyric, tolower))
+    
    
   #traverses the data and extracts every profanity word encountered in 
   #each row\song

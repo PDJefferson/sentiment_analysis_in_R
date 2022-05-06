@@ -69,7 +69,7 @@ negative_songs <- sample_n(negative_songs, 7500)
 
 #to get a perfectly balanced amount of positive and negative songs
 data <- rbind(positive_songs, negative_songs)
-
+ 
 #shuffles the data
 data = data[sample(1:nrow(data)), ]
 
@@ -162,7 +162,60 @@ tf_idf_dataset$rating = dataset$rating
 #Encoding the dependent feature as factor
 tf_idf_dataset$rating = factor(tf_idf_dataset$rating, 
                                      levels = c(0, 1))
-
+#saving the data
 write.csv(tf_idf_dataset, 
           "./data/tf_idf_dataset.csv",
           row.names = FALSE)
+
+
+#loading tf_idf_dataset 
+tf_idf_dataset <- read.csv("./data/tf_idf_dataset.csv")
+#unknown data
+unknown_data <- read.csv("./data/banda_music.csv")
+
+#cleaning data
+unknown_data <- remove_redundancies_and_bad_Words(unknown_data)
+
+unknown_data <- subset(unknown_data, select = -c(album))
+
+#load clean data
+cleaned_data <- read.csv("./data/cleaned_15k_dataset.csv")
+
+
+#cleaning up the data
+#vcorpus is a data structure that will help cleaning
+#the text so we can work with our data using the bag of words model
+corpus_dataset = VCorpus(VectorSource(cleaned_data$lyric))
+
+#puts all the words in lowercases
+corpus_dataset = tm_map(corpus_dataset, content_transformer(tolower))
+#removes the stop words, like the, a,of etc
+corpus_dataset = tm_map(corpus_dataset, removeWords, stopwords())
+#removes white spaces and extra spaces
+corpus_dataset = tm_map(corpus_dataset, stripWhitespace)
+
+vector = data.frame(lyric = sapply(corpus_dataset, as.character), 
+                    stringsAsFactors = FALSE)
+
+#creates tf-idf vectorizer. only takes into account features that appear at
+#least .0045 in entire data to reduce dimensionality
+tfv <- TfIdfVectorizer$new(min_df = 0.00050, remove_stopwords = FALSE)
+
+cl <- makePSOCKcluster(detectCores() - 1)
+registerDoParallel(cl)
+
+#we fit on data
+tfv$fit(vector$lyric)
+
+#tranforms the values into tf-idf values
+tf_matrix <- tfv$transform(vector$lyric)
+
+stopCluster(cl)
+
+#creating a vector to work with the algorithm
+#we use as.data.frame to transform in this case a matrix to a vector
+dataset = as.data.frame(as.matrix(tf_matrix))
+
+
+
+

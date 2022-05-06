@@ -1,7 +1,7 @@
 needed_packages <- c("dplyr", "stringr", "tidytext", "tidyr", "textdata", 
                      "tm", "SnowballC", "caTools", "rlang", "gt", "stopwords",
                      "sentimentr", "tidytext", "magrittr", "textstem", "e1071"
-                     ,"qdap", "rpud")
+                     ,"qdap", "rpud", "caret")
 
 #install packages in case they are not install yet
 #install.packages(needed_packages)
@@ -36,37 +36,6 @@ y_pred = predict(classifier, newdata = test_set[-ncol(test_set)])
 
 #Making the Confusion Matrix to compare results
 confusion_matrix = table(test_set[, ncol(test_set)], y_pred)
-
-#try caret
-#install.packages("caret")
-library(caret)
-
-#k-fold to improve accuracy
-folds = createFolds(training_set$rating, k = 5)
-
-#l-apply function to implement k-fold algorithm which consists of applying a 
-#function to the different vars in the list. List is going to be the fold list
-#that contains k fold and the function will hold the accuracy of each method
-#test by the algo
-cv = lapply(folds,function(x) {
-  #compute the accuracy of each fold
-  training_fold = training_set[-x, ]
-  test_fold = training_set[x, ]
-  classifier <- svm(formula = training_fold$rating ~ .,
-                    data = training_fold[-ncol(training_fold)],
-                    type = "C-classification",
-                    kernel = "linear")
-  
-  #predicting test results
-  y_pred = predict(classifier, newdata = test_fold[-ncol(test_fold)])
-  
-  #Making the Confusion Matrix to compare results
-  confusion_matrix = table(test_fold[, ncol(test_set)], y_pred)
-  
-  accuracy = (confusion_matrix[1,1] + confusion_matrix[2,2]) / (nrow(test_fold))
-  
-  return(accuracy)
-})
 
 #get better configurations for svm 
 classifier = train(y = training_set$rating, x = training_set[-ncol(training_set)], 

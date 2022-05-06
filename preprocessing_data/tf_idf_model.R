@@ -8,10 +8,6 @@ tf_idf_vectorizer <- function(dataset_original) {
 
   #puts all the words in lowercases
   corpus_dataset = tm_map(corpus_dataset, content_transformer(tolower))
-  #removes all the numbers in the text
-  corpus_dataset = tm_map(corpus_dataset, removeNumbers)
-  #removes all the punctuations in our text
-  corpus_dataset = tm_map(corpus_dataset, removePunctuation)
   #removes the stop words, like the, a,of etc
   corpus_dataset = tm_map(corpus_dataset, removeWords, stopwords())
   #removes white spaces and extra spaces
@@ -21,13 +17,13 @@ tf_idf_vectorizer <- function(dataset_original) {
                       stringsAsFactors = FALSE)
   
   #creates tf-idf vectorizer. only takes into account features that appear at
-  #leat .0045 in entire data to reduce dimensionality
-  tfv <- TfIdfVectorizer$new(min_df = 0.0050, remove_stopwords = FALSE)
+  #least .0045 in entire data to reduce dimensionality
+  tfv <- TfIdfVectorizer$new(min_df = 0.00050, remove_stopwords = FALSE)
   
   cl <- makePSOCKcluster(detectCores() - 1)
   registerDoParallel(cl)
   
-  # we fit on train data
+  #we fit the vectorizer on the data
   tfv$fit(vector$lyric)
    
   #tranforms the values into tf-idf values

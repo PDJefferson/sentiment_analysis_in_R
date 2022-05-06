@@ -9,64 +9,41 @@ needed_packages <- c("dplyr", "stringr", "tidytext", "tidyr", "textdata",
 
 lapply(needed_packages, require, character.only = TRUE)
 
+swears<-read.csv("./data/swear_words.csv")
+
+# These additional stopwords found by preliminary analysis
+additional_stopwords <- c("mmm", "gotta", "beyoncé", "beyonc�", "hey","em", 
+                          "huh", "eh", "te", "ohoh", "yeah", "oh","ya", "yo", 
+                          "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
+                          "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki",
+                          "imma","y'all","c'mon", "minaj", "whoa", "nananana", 
+                          "rihanna", "eminem", "cardi", "niggas", 
+                          "pre", "Pre", "na", "ella", "la", "yonc�", "jhen�" ,
+                          "taylor")
+
 #loading r scripts
 source("./preprocessing_data/remove_redundancies_and_bad_words.R")
-source("./preprocessing_data/labeling_data.R")
-source("./preprocessing_data/bag_of_words.R")
 source("./preprocessing_data/clean_lyrics.R")
 source("./plots/display_bag_of_words_model.R")
 source("./plots/display_cleaned_data.R")
 
-swears<-read.csv("./data/labeled_lyrics_cleaned.csv")
-
-# These additional stopwords found by preliminary analysis
-additional_stopwords <- c("mmm", "gotta", "beyonc", "beyonc�" ,"hey","em", 
-                          "huh", "eh", "te", "ohoh", "yeah", "oh","ya", "yo", 
-                          "tu", "lo", "je","yuh", "woo", "mi", "de", "da",
-                          "eheh","ayy","uhhuh","ariana", "grande", "ah","nicki",
-                          "y'all","c'mon", "minaj", "whoa", "nananana", 
-                          "rihanna", "eminem", "cardi", "babe", "niggas", 
-                          "pre", "na", "ella", "la", "yonc�", "jhen�")
-
 #loading the data
-dataset <- read.csv("./data/labeled_lyrics_cleaned.csv")
+dataset <- read.csv("./data/cleaned_15k_dataset.csv")
 
-#change the labels of the data
-dataset <- dataset %>%
-  transmute(artist = artist
-            ,lyric = dataset$seq
-            ,title = song
-            ,rating = ifelse(label >= 0.67 ,
-                             1 , 
-                             ifelse(label <= 0.33, 0,  label)))
-
-dataset <- data %>%
-  filter(rating == 1 | rating == 0)
-
-cl <- makePSOCKcluster(detectCores() - 1)
-registerDoParallel(cl)
-
-#removes redudancies
-dataset <- remove_redundancies_and_bad_Words(dataset)
-
-stopCluster(cl)
-
-dataset <- sample_n(dataset, 15000)
-
-#copying the data to a new vector
+#copying the data to a new table
 dataset1 <- dataset
 
 #display clean dataset in a table
 create_table_to_display_clean_dataset(dataset)
 
 #display tokenize data
-#create_graph_to_display_frequency_of_sentiments(labeled_dataset)
+#create_graph_to_display_frequency_of_sentiments(dataset)
 
 #loading tf_idf model to work with the classifier
 tf_idf_model <- read.csv("./data/tf_idf_dataset.csv")
 
 #display tf_idf
-create_table_for_bag_of_words(tf_idf_model)
+create_table_for_tf_idf_model(tf_idf_model)
 
 #vector to corpus data structure to clean data in an efficient manner
 Corpus_data <- Corpus(VectorSource(dataset1$lyric))
@@ -109,6 +86,7 @@ kable(head(dtm_d1, 10), col.names = c("Lemma", "Frequency"), row.names = FALSE,
 #--------------------------------------------------------------------
 
 #displays a wordcloud after the data has been stripped from the stopwords
+#does not work because the dataset has previously lemmatized words
 webshot::install_phantomjs(force = TRUE)
 
 wordcloud2(dtm_d, fontFamily = "Comic Sans", size = 1.2)
