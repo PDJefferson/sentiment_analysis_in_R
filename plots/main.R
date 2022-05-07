@@ -63,7 +63,7 @@ dtm_m <- as.matrix(Song_Lyrics_dtm)
 dtm_v <- sort(rowSums(dtm_m), decreasing = TRUE)
 dtm_d <- data.frame(word = names(dtm_v), freq = dtm_v)
 kable(head(dtm_d, 10), col.names = c("Word", "Frequency"), row.names = FALSE,
-      caption = "Table 1: Most Common Terms (Cleaned Text)", align = "c") %>%
+      caption = "Table 1: Most Common Terms (lemmatized words with stop words)", align = "c") %>%
   kable_styling(full_width = F)
 
 # Lemmatization
@@ -78,7 +78,7 @@ dtm_m1 <- as.matrix(Song_Lyrics_dtm1)
 dtm_v1 <- sort(rowSums(dtm_m1), decreasing = TRUE)
 dtm_d1 <- data.frame(word = names(dtm_v1), freq = dtm_v1)
 kable(head(dtm_d1, 10), col.names = c("Lemma", "Frequency"), row.names = FALSE,
-      caption = "Table 2: Most Common Terms (Lemmatized Text)", align = "c") %>%
+      caption = "Table 2: Most Common Terms (without stop words)", align = "c") %>%
   kable_styling(full_width = F)
 
 #--------------------------------------------------------------------

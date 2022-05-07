@@ -38,6 +38,7 @@ classifier = randomForest(x = training_set[-ncol(training_set)],
                           y = training_set$rating,
                           ntree = 2501,
                           sampsize = 7000,
+                          mtry = 37,
                           type = "classification",
                           do.trace = 25)
 
@@ -58,8 +59,6 @@ classifier_best_setting = train(y = training_set$rating,
                    method = "rf")
 
 stopCluster(cl)
-
-
 
 #predicting test results
 y_pred_test_set = predict(classifier, newdata = test_set[-ncol(test_set)])
@@ -122,13 +121,3 @@ plot_confusion_matrix(cfm,
 
 #check how the amount of trees affect the accuracy of the predictions
 plot(classifier)
-
-#plot roc curve
-pred <- prediction(predictions = as.numeric(y_pred_test_set), 
-                   labels = as.numeric(test_set$rating))
-perf <- performance(pred,"tpr","fpr")
-
-plot(perf , colorize = TRUE) +
-  title("ROC CURVE")
-
-#test on unknown data

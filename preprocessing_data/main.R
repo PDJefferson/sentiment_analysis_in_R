@@ -181,7 +181,6 @@ unknown_data <- subset(unknown_data, select = -c(album))
 #load clean data
 cleaned_data <- read.csv("./data/cleaned_15k_dataset.csv")
 
-
 #cleaning up the data
 #vcorpus is a data structure that will help cleaning
 #the text so we can work with our data using the bag of words model
