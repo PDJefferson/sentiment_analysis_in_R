@@ -9,8 +9,6 @@ needed_packages <- c("dplyr", "stringr", "tidytext", "tidyr", "textdata",
 #load packages 
 lapply(needed_packages, require, character.only = TRUE)
 
-source("./random_forest_generation_classifier/random_forest_classification.R")
-
 #loading the preprocessed data
 tf_idf_dataset <- read.csv("./data/tf_idf_dataset.csv")
 
