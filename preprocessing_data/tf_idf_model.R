@@ -17,8 +17,8 @@ tf_idf_vectorizer <- function(dataset_original) {
                       stringsAsFactors = FALSE)
   
   #creates tf-idf vectorizer. only takes into account features that appear at
-  #least .0045 in entire data to reduce dimensionality
-  tfv <- TfIdfVectorizer$new(min_df = 0.00050, remove_stopwords = FALSE)
+  #least .0050 in entire data to reduce dimensionality
+  tfv <- TfIdfVectorizer$new(min_df = 0.0050, remove_stopwords = FALSE)
   
   cl <- makePSOCKcluster(detectCores() - 1)
   registerDoParallel(cl)
