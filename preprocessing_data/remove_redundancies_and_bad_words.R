@@ -1,7 +1,5 @@
 remove_redundancies_and_bad_Words <- function(dataset) {
   
-  names_removal <- c("beyoncé", "beyonc�","yonc" ,"jhen", "ros")
-  
   #detect non-english songs to remove it
   non_english_songs_remover <- ifelse(detect_language(dataset$lyric) != "en", 
                                       TRUE, 
@@ -36,7 +34,7 @@ remove_redundancies_and_bad_Words <- function(dataset) {
   dataset = dataset[!few_lyrics_remover,]
   
   #converts words to lowercase,lemmatize words
-  #replaces extra contractions, removes numbers and punctuation
+  #replaces extra contractions, removes numbers and punctuations
   dataset <- dataset %>%
     mutate(lyric = sapply(lyric, tolower)) %>%
     mutate(lyric = replace_contraction(lyric)) %>%
@@ -51,31 +49,33 @@ remove_redundancies_and_bad_Words <- function(dataset) {
   dataset <- dataset %>%
     mutate(lyric = extract_profanity_terms(get_sentences(lyric), 
                                           profanity_list = swears$swear_words))
-  #converting list to vector
+  #saving the swear words into this vector
   swear_words_list <- unlist(dataset$lyric$profanity,
                              recursive = TRUE,
                              use.names = TRUE)
   
-  #removing duplicates of same word
+  #removes duplicates of same word
   swear_words_list <- paste(unique(swear_words_list))
   
-  #finally removes the swear words that have in common with the list
+  
+  #passes all the stop words to this vector so that we can later remove it from
+  #our data
+  stopwords_list = paste(stopwords('en'), collapse = '\\b|\\b')
+  stopwords_list = paste0('\\b', stopwords_list, '\\b')
+  
+  #removes stop words and additional white spaces
+  dataset <- dataset %>%
+    mutate(lyric = str_remove_all(lyric, stopwords_list)) %>%
+    mutate(lyric = stripWhitespace(lyric))
+    
+  
+  #removes the swear words that have in common with the list
   dataset <- dataset %>%
     mutate(lyric = removeWords(lyric$sentence, swear_words_list))
    
   #remove additional stop words
   dataset <- dataset %>%
-    mutate(lyric = removeWords(lyric, additional_stopwords))
-    
-  #removes names
-  #adds a | to separate each word as gsub uses that to recognize each word
-  #separately.
-  additional_words <- paste(names_removal, collapse = "|")
-  dataset <- dataset %>%
-    mutate(lyric = sub("^\\s+", "", gsub(additional_words,
-                                         "",
-                                         lyric,
-                                         ignore.case=TRUE)))
+    mutate(lyric = removeWords(lyric, additional_stopwords$stop_words))
   
   return(dataset)
 }

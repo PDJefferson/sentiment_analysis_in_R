@@ -9,11 +9,12 @@ create_graph_to_display_frequency_of_sentiments <- function(dataset) {
     unnest_tokens(word, lyric)
     
   #we get the words that have in common with bing and use the line number to 
-  #to keep track of the song. we separate the sentiment positive and negative by
-  #pivot wider and finally we get the net sentiment of the lyric
+  #to keep track of what song that word belongs to.After that, 
+  #we separate the sentiments positive and negative by
+  #using pivot wider and we count the frequency of positive and negative sentiments
   prepare_tokenized_dataset <- tokenized_dataset %>%
     inner_join(get_sentiments("bing")) %>%
-    count(artist, song_number = linenumber %/% 4, sentiment) %>%
+    count(artist, song_number = linenumber, sentiment) %>%
     pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) %>%
     mutate(sentiment = positive - negative)
   
